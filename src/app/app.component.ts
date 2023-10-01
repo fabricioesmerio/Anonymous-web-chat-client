@@ -1,26 +1,35 @@
 import { HttpClient } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import * as signalR from '@microsoft/signalr';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
-  public forecasts?: WeatherForecast[];
+export class AppComponent implements OnInit {
+
+  connection = new signalR.HubConnectionBuilder()
+    .configureLogging(signalR.LogLevel.Debug)
+    .withUrl("https://localhost:7204/chat", {
+      skipNegotiation: true,
+      transport: signalR.HttpTransportType.WebSockets
+    })
+    .build();
 
   constructor(http: HttpClient) {
-    http.get<WeatherForecast[]>('/weatherforecast').subscribe(result => {
-      this.forecasts = result;
-    }, error => console.error(error));
+
+  }
+
+  ngOnInit(): void {
+    this.connection.start()
+      .then(() => {
+        console.log(this.connection.connectionId)
+      })
+      .catch(err => {
+        console.error('==========> ', err)
+      })
   }
 
   title = 'angularapp';
-}
-
-interface WeatherForecast {
-  date: string;
-  temperatureC: number;
-  temperatureF: number;
-  summary: string;
 }
